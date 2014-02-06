@@ -12,6 +12,7 @@ import com.badlogic.gdx.graphics.Pixmap.Format;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.BitmapFontCache;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -38,6 +39,7 @@ public class Gdx2d implements ApplicationListener {
    private WeakReference<Body> bottle;
    private long lastBallTime;
    private BitmapFont font;
+   private BitmapFontCache scoreText;
    
    static final float WORLD_TO_BOX = 0.1f;
    static final float BOX_TO_WORLD = 10f;
@@ -58,10 +60,12 @@ public class Gdx2d implements ApplicationListener {
       createBottle();
       
       // font and UI
-      font = new BitmapFont(Gdx.files.internal("data/monaco.fnt"), 
-               Gdx.files.internal("data/monaco.png"), false);
       uiCamera = new OrthographicCamera(512*UI_SCALE, h / w * 512*UI_SCALE);
       uiCamera.combined.setTranslation(-1, 1, 0);
+      font = new BitmapFont(Gdx.files.internal("data/monaco.fnt"), 
+               Gdx.files.internal("data/monaco.png"), false);
+      scoreText = new BitmapFontCache(font);
+      scoreText.addText("Score", 0, 0);
    }
 
    @Override
@@ -79,11 +83,10 @@ public class Gdx2d implements ApplicationListener {
       world.step(1 / 60f, 6, 2);
 
       Array<Body> bi = new Array<Body>();
-      bi.ordered = true;
       world.getBodies(bi);
 
       batch.setProjectionMatrix(camera.combined);
-      //batch.enableBlending();
+      batch.enableBlending();
       batch.begin();
 
       renderBody(bottle.get(), (Sprite)bottle.get().getUserData());
@@ -96,9 +99,10 @@ public class Gdx2d implements ApplicationListener {
 
       batch.setProjectionMatrix(uiCamera.combined);
       font.draw(batch, "Hello world", 100, -100);
+      scoreText.draw(batch);
       batch.end();
       
-      debugRenderer.render(world, camera.combined);
+      //debugRenderer.render(world, camera.combined);
    }
 
    private void renderBody(Body b, Sprite e) {
