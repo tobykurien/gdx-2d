@@ -68,6 +68,7 @@ public class Gdx2d implements ApplicationListener {
                (System.currentTimeMillis() - lastBallTime > 100)) {
          lastBallTime = System.currentTimeMillis();
          createBall();
+         Gdx.app.log("world", "Bodies = " + world.getBodyCount());
       }
       
       world.step(1 / 60f, 6, 2);
@@ -81,10 +82,7 @@ public class Gdx2d implements ApplicationListener {
       batch.begin();
 
       for (Body b : bi) {
-         // Get the bodies user data - in this example, our user
-         // data is an instance of the Entity class
          Sprite e = (Sprite) b.getUserData();
-
          if (e != null) {
             // Update the entities/sprites position and angle
             Vector2 origin = new Vector2(e.getOriginX(), e.getOriginY());
@@ -92,6 +90,7 @@ public class Gdx2d implements ApplicationListener {
             
             if (pos.y < -CAMERA_SCALE) {
                // out of view
+               world.destroyBody(b);
             } else {
                e.setPosition(pos.x, pos.y);
                // We need to convert our angle from radians to degrees
@@ -184,7 +183,6 @@ public class Gdx2d implements ApplicationListener {
 
       // 1. Create a BodyDef, as usual.
       BodyDef bd = new BodyDef();
-      bd.position.set(0, 1);
       bd.type = BodyType.DynamicBody;
 
       // Create our body in the world using our body definition
@@ -219,9 +217,11 @@ public class Gdx2d implements ApplicationListener {
       
       // origin of this sprite (it's center) needs to overlap the 
       // center of the circle in the body def above
-      sprite.setOrigin(body.getPosition().x + (sprite.getHeight()/2), 
-               body.getPosition().y - 1 + (sprite.getHeight()/2));
+      sprite.setOrigin(sprite.getHeight()/2, sprite.getHeight()/2);
       body.setUserData(sprite);
       pm.dispose();
+      
+      // place ball above bottle
+      body.setTransform(0, 1, 0);
    }
 }
