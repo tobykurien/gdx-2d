@@ -34,14 +34,15 @@ public class Gdx2d implements ApplicationListener {
    private BitmapFont font;
    static final float WORLD_TO_BOX = 0.1f;
    static final float BOX_TO_WORLD = 10f;
-   static final float BOX_TO_CAMERA = 3f;
+   static final float CAMERA_SCALE = 3f;
+   static final float UI_SCALE = 3f;
 
    @Override
    public void create() {
       float w = Gdx.graphics.getWidth();
       float h = Gdx.graphics.getHeight();
 
-      camera = new OrthographicCamera(BOX_TO_CAMERA, h / w * BOX_TO_CAMERA);
+      camera = new OrthographicCamera(CAMERA_SCALE, h / w * CAMERA_SCALE);
       
       batch = new SpriteBatch();
 
@@ -52,7 +53,7 @@ public class Gdx2d implements ApplicationListener {
       // font and UI
       font = new BitmapFont(Gdx.files.internal("data/monaco.fnt"), 
                Gdx.files.internal("data/monaco.png"), false);
-      uiCamera = new OrthographicCamera(1512, h / w * 1512);
+      uiCamera = new OrthographicCamera(512*UI_SCALE, h / w * 512*UI_SCALE);
       uiCamera.combined.setTranslation(-1, 1, 0);
    }
 
@@ -86,7 +87,7 @@ public class Gdx2d implements ApplicationListener {
             Vector2 origin = new Vector2(e.getOriginX(), e.getOriginY());
             Vector2 pos = b.getPosition().sub(origin);
             
-            if (pos.y < -BOX_TO_CAMERA) {
+            if (pos.y < -CAMERA_SCALE) {
                // out of view
             } else {
                e.setPosition(pos.x, pos.y);
