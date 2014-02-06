@@ -2,6 +2,7 @@ package com.tobykurien.gdx2d;
 
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.GL10;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
@@ -25,6 +26,7 @@ public class Gdx2d implements ApplicationListener {
 
    private World world;
    private Box2DDebugRenderer debugRenderer;
+   private long lastBallTime;
    static final float WORLD_TO_BOX = 0.1f;
    static final float BOX_TO_WORLD = 10f;
    static final float BOX_TO_CAMERA = 3f;
@@ -82,20 +84,29 @@ public class Gdx2d implements ApplicationListener {
 //      sprite.setPosition(bottlePos.x, bottlePos.y);
 //      sprite.setRotation(bottleModel.getAngle() * MathUtils.radiansToDegrees);
    }
+   
+   public void createBall() {
+      float BOTTLE_WIDTH = 0.5f;
 
-   @Override
-   public void dispose() {
-      batch.dispose();
-      
-      Array<Body> bi = new Array<Body>();
-      world.getBodies(bi);
-      for (Body b : bi) {
-         Sprite s = (Sprite) b.getUserData();
-         if (s != null) s.getTexture().dispose();
-      }
-      
-      world.dispose();
-      debugRenderer.dispose();
+      // 0. Create a loader for the file saved from the editor.
+      BodyEditorLoader loader = new BodyEditorLoader(Gdx.files.internal("data/test.json"));
+
+      // 1. Create a BodyDef, as usual.
+      BodyDef bd = new BodyDef();
+      bd.position.set(0, 1);
+      bd.type = BodyType.DynamicBody;
+
+      // 2. Create a FixtureDef, as usual.
+      FixtureDef fd = new FixtureDef();
+      fd.density = 1;
+      fd.friction = 0.5f;
+      fd.restitution = 0.3f;
+
+      // 3. Create a Body, as usual.
+      Body bottleModel = world.createBody(bd);
+
+      // 4. Create the body fixture automatically by using the loader.
+      loader.attachFixture(bottleModel, "ball", fd, BOTTLE_WIDTH);
    }
 
    @Override
@@ -103,6 +114,12 @@ public class Gdx2d implements ApplicationListener {
       Gdx.gl.glClearColor(0.3f, 0.3f, 0.3f, 1);
       Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
 
+      if (Gdx.input.isButtonPressed(Input.Buttons.LEFT) && 
+               (System.currentTimeMillis() - lastBallTime > 100)) {
+         lastBallTime = System.currentTimeMillis();
+         createBall();
+      }
+      
       world.step(1 / 60f, 6, 2);
 
       Array<Body> bi = new Array<Body>();
@@ -142,5 +159,21 @@ public class Gdx2d implements ApplicationListener {
 
    @Override
    public void resume() {
+   }
+
+
+   @Override
+   public void dispose() {
+      batch.dispose();
+      
+      Array<Body> bi = new Array<Body>();
+      world.getBodies(bi);
+      for (Body b : bi) {
+         Sprite s = (Sprite) b.getUserData();
+         if (s != null) s.getTexture().dispose();
+      }
+      
+      world.dispose();
+      debugRenderer.dispose();
    }
 }
