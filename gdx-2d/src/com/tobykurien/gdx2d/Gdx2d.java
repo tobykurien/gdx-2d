@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.GL10;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Texture.TextureFilter;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -24,11 +25,13 @@ import com.badlogic.gdx.utils.Array;
 
 public class Gdx2d implements ApplicationListener {
    private OrthographicCamera camera;
+   private OrthographicCamera uiCamera;
    private SpriteBatch batch;
 
    private World world;
    private Box2DDebugRenderer debugRenderer;
    private long lastBallTime;
+   private BitmapFont font;
    static final float WORLD_TO_BOX = 0.1f;
    static final float BOX_TO_WORLD = 10f;
    static final float BOX_TO_CAMERA = 3f;
@@ -39,11 +42,19 @@ public class Gdx2d implements ApplicationListener {
       float h = Gdx.graphics.getHeight();
 
       camera = new OrthographicCamera(BOX_TO_CAMERA, h / w * BOX_TO_CAMERA);
+      //camera.translate(camera.viewportWidth, camera.viewportHeight);
+      
       batch = new SpriteBatch();
 
       world = new World(new Vector2(0, -10), true);
       debugRenderer = new Box2DDebugRenderer();
       createBottle();
+      
+      // font and UI
+      font = new BitmapFont(Gdx.files.internal("data/toby.fnt"), 
+               Gdx.files.internal("data/toby.png"), false);
+      uiCamera = new OrthographicCamera(512, 512);
+      uiCamera.combined.setTranslation(-1, 1, 0);
    }
 
    private void createBottle() {
@@ -159,7 +170,10 @@ public class Gdx2d implements ApplicationListener {
          }
       }
 
+      batch.setProjectionMatrix(uiCamera.combined);
+      font.draw(batch, "Hello world", 0, 0);
       batch.end();
+      
       debugRenderer.render(world, camera.combined);
    }
 
@@ -178,6 +192,7 @@ public class Gdx2d implements ApplicationListener {
    @Override
    public void dispose() {
       batch.dispose();
+      font.dispose();
 
       Array<Body> bi = new Array<Body>();
       world.getBodies(bi);
