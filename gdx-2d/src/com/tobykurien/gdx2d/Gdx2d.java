@@ -209,10 +209,10 @@ public class Gdx2d implements ApplicationListener {
       circle.dispose();
       
       // create sprite for ball
-      Pixmap pm = new Pixmap(16, 16, Pixmap.Format.RGB888);
+      Pixmap pm = new Pixmap(16, 16, Pixmap.Format.RGBA8888);
       pm.setColor(1, 0, 0, 1);
-      pm.setBlending(Pixmap.Blending.None);
-      pm.drawCircle(pm.getWidth()/2, pm.getWidth()/2, pm.getWidth()/2);
+      pm.fillCircle(pm.getWidth()/2, pm.getWidth()/2, pm.getWidth()/2);
+      //pm.drawCircle(pm.getWidth()/2, pm.getWidth()/2, pm.getWidth()/2);
       Sprite sprite = new Sprite(new Texture(pm));
       // size the sprite to match the body def above
       sprite.setSize(0.06f, 0.06f * sprite.getHeight() / sprite.getWidth());
