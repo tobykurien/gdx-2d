@@ -5,6 +5,8 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.GL10;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Pixmap.Format;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -71,6 +73,7 @@ public class Gdx2d implements ApplicationListener {
       world.step(1 / 60f, 6, 2);
 
       Array<Body> bi = new Array<Body>();
+      bi.ordered = true;
       world.getBodies(bi);
 
       batch.setProjectionMatrix(camera.combined);
@@ -194,15 +197,31 @@ public class Gdx2d implements ApplicationListener {
       // Create a fixture definition to apply our shape to
       FixtureDef fixtureDef = new FixtureDef();
       fixtureDef.shape = circle;
-      fixtureDef.density = 0.5f;
+      fixtureDef.density = 0.7f;
       fixtureDef.friction = 0.4f;
-      fixtureDef.restitution = 0.6f; // Make it bounce a little bit
+      fixtureDef.restitution = 0.3f;
 
       // Create our fixture and attach it to the body
-      Fixture fixture = body.createFixture(fixtureDef);
+      body.createFixture(fixtureDef);
 
       // Remember to dispose of any shapes after you're done with them!
       // BodyDef and FixtureDef don't need disposing, but shapes do.
       circle.dispose();
+      
+      // create sprite for ball
+      Pixmap pm = new Pixmap(16, 16, Pixmap.Format.RGB888);
+      pm.setColor(1, 0, 0, 1);
+      pm.setBlending(Pixmap.Blending.None);
+      pm.drawCircle(pm.getWidth()/2, pm.getWidth()/2, pm.getWidth()/2);
+      Sprite sprite = new Sprite(new Texture(pm));
+      // size the sprite to match the body def above
+      sprite.setSize(0.06f, 0.06f * sprite.getHeight() / sprite.getWidth());
+      
+      // origin of this sprite (it's center) needs to overlap the 
+      // center of the circle in the body def above
+      sprite.setOrigin(body.getPosition().x + (sprite.getHeight()/2), 
+               body.getPosition().y - 1 + (sprite.getHeight()/2));
+      body.setUserData(sprite);
+      pm.dispose();
    }
 }
