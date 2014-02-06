@@ -42,7 +42,6 @@ public class Gdx2d implements ApplicationListener {
       float h = Gdx.graphics.getHeight();
 
       camera = new OrthographicCamera(BOX_TO_CAMERA, h / w * BOX_TO_CAMERA);
-      //camera.translate(camera.viewportWidth, camera.viewportHeight);
       
       batch = new SpriteBatch();
 
@@ -51,11 +50,88 @@ public class Gdx2d implements ApplicationListener {
       createBottle();
       
       // font and UI
-      font = new BitmapFont(Gdx.files.internal("data/toby.fnt"), 
-               Gdx.files.internal("data/toby.png"), false);
-      uiCamera = new OrthographicCamera(512, 512);
+      font = new BitmapFont(Gdx.files.internal("data/monaco.fnt"), 
+               Gdx.files.internal("data/monaco.png"), false);
+      uiCamera = new OrthographicCamera(1512, h / w * 1512);
       uiCamera.combined.setTranslation(-1, 1, 0);
    }
+
+   @Override
+   public void render() {
+      Gdx.gl.glClearColor(0.3f, 0.3f, 0.3f, 1);
+      Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
+
+      if (Gdx.input.isButtonPressed(Input.Buttons.LEFT) && 
+               (System.currentTimeMillis() - lastBallTime > 100)) {
+         lastBallTime = System.currentTimeMillis();
+         createBall();
+      }
+      
+      world.step(1 / 60f, 6, 2);
+
+      Array<Body> bi = new Array<Body>();
+      world.getBodies(bi);
+
+      batch.setProjectionMatrix(camera.combined);
+      //batch.enableBlending();
+      batch.begin();
+
+      for (Body b : bi) {
+         // Get the bodies user data - in this example, our user
+         // data is an instance of the Entity class
+         Sprite e = (Sprite) b.getUserData();
+
+         if (e != null) {
+            // Update the entities/sprites position and angle
+            Vector2 origin = new Vector2(e.getOriginX(), e.getOriginY());
+            Vector2 pos = b.getPosition().sub(origin);
+            
+            if (pos.y < -BOX_TO_CAMERA) {
+               // out of view
+            } else {
+               e.setPosition(pos.x, pos.y);
+               // We need to convert our angle from radians to degrees
+               e.setRotation(MathUtils.radiansToDegrees * b.getAngle());
+               e.draw(batch);
+            }
+         }
+      }
+
+      batch.setProjectionMatrix(uiCamera.combined);
+      font.draw(batch, "Hello world", 100, -100);
+      batch.end();
+      
+      debugRenderer.render(world, camera.combined);
+   }
+
+   @Override
+   public void resize(int width, int height) {
+   }
+
+   @Override
+   public void pause() {
+   }
+
+   @Override
+   public void resume() {
+   }
+
+   @Override
+   public void dispose() {
+      batch.dispose();
+      font.dispose();
+
+      Array<Body> bi = new Array<Body>();
+      world.getBodies(bi);
+      for (Body b : bi) {
+         Sprite s = (Sprite) b.getUserData();
+         if (s != null) s.getTexture().dispose();
+      }
+
+      world.dispose();
+      debugRenderer.dispose();
+   }
+
 
    private void createBottle() {
       float BOTTLE_WIDTH = 1;
@@ -127,81 +203,5 @@ public class Gdx2d implements ApplicationListener {
       // Remember to dispose of any shapes after you're done with them!
       // BodyDef and FixtureDef don't need disposing, but shapes do.
       circle.dispose();
-   }
-
-   @Override
-   public void render() {
-      Gdx.gl.glClearColor(0.3f, 0.3f, 0.3f, 1);
-      Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
-
-      if (Gdx.input.isButtonPressed(Input.Buttons.LEFT) && 
-               (System.currentTimeMillis() - lastBallTime > 100)) {
-         lastBallTime = System.currentTimeMillis();
-         createBall();
-      }
-      
-      world.step(1 / 60f, 6, 2);
-
-      Array<Body> bi = new Array<Body>();
-      world.getBodies(bi);
-
-      batch.setProjectionMatrix(camera.combined);
-      batch.enableBlending();
-      batch.begin();
-
-      for (Body b : bi) {
-         // Get the bodies user data - in this example, our user
-         // data is an instance of the Entity class
-         Sprite e = (Sprite) b.getUserData();
-
-         if (e != null) {
-            // Update the entities/sprites position and angle
-            Vector2 origin = new Vector2(e.getOriginX(), e.getOriginY());
-            Vector2 pos = b.getPosition().sub(origin);
-            
-            if (pos.y < -BOX_TO_CAMERA) {
-               // out of view
-            } else {
-               e.setPosition(pos.x, pos.y);
-               // We need to convert our angle from radians to degrees
-               e.setRotation(MathUtils.radiansToDegrees * b.getAngle());
-               e.draw(batch);
-            }
-         }
-      }
-
-      batch.setProjectionMatrix(uiCamera.combined);
-      font.draw(batch, "Hello world", 0, 0);
-      batch.end();
-      
-      debugRenderer.render(world, camera.combined);
-   }
-
-   @Override
-   public void resize(int width, int height) {
-   }
-
-   @Override
-   public void pause() {
-   }
-
-   @Override
-   public void resume() {
-   }
-
-   @Override
-   public void dispose() {
-      batch.dispose();
-      font.dispose();
-
-      Array<Body> bi = new Array<Body>();
-      world.getBodies(bi);
-      for (Body b : bi) {
-         Sprite s = (Sprite) b.getUserData();
-         if (s != null) s.getTexture().dispose();
-      }
-
-      world.dispose();
-      debugRenderer.dispose();
    }
 }
