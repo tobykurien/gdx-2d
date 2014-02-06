@@ -2,13 +2,17 @@ package com.tobykurien.gdx2d;
 
 import java.lang.ref.WeakReference;
 
+import aurelienribon.tweenengine.Tween;
+import aurelienribon.tweenengine.TweenAccessor;
+import aurelienribon.tweenengine.TweenManager;
+
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL10;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Pixmap;
-import com.badlogic.gdx.graphics.Pixmap.Format;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -23,7 +27,6 @@ import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.CircleShape;
-import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
@@ -40,6 +43,7 @@ public class Gdx2d implements ApplicationListener {
    private long lastBallTime;
    private BitmapFont font;
    private BitmapFontCache scoreText;
+   private TweenManager tm;
    
    static final float WORLD_TO_BOX = 0.1f;
    static final float BOX_TO_WORLD = 10f;
@@ -66,6 +70,25 @@ public class Gdx2d implements ApplicationListener {
                Gdx.files.internal("data/monaco.png"), false);
       scoreText = new BitmapFontCache(font);
       scoreText.addText("Score", 0, 0);
+      
+      // animations
+      tm = new TweenManager();
+      Tween.setCombinedAttributesLimit(4); // rgba
+      Tween.registerAccessor(Body.class, new TweenAccessor<Body>() {
+         @Override
+         public int getValues(Body target, int tweenType, float[] returnValues) {
+             Sprite s = (Sprite) target.getUserData();
+             returnValues[0] = s.getScaleX();
+             returnValues[1] = s.getScaleY();
+             return 2;
+         }
+         
+         @Override
+         public void setValues(Body target, int tweenType, float[] newValues) {
+            Sprite s = (Sprite) target.getUserData();
+            s.setScale(newValues[0], newValues[1]);
+         }
+      });      
    }
 
    @Override
@@ -81,6 +104,7 @@ public class Gdx2d implements ApplicationListener {
       }
       
       world.step(1 / 60f, 6, 2);
+      tm.update(Gdx.graphics.getDeltaTime());
 
       Array<Body> bi = new Array<Body>();
       world.getBodies(bi);
@@ -233,5 +257,6 @@ public class Gdx2d implements ApplicationListener {
       
       // place ball above bottle
       body.setTransform(0, 1, 0);
+      Tween.to(body, 0, 0.2f).target(2, 2).repeatYoyo(5, 0).start(tm);
    }
 }
