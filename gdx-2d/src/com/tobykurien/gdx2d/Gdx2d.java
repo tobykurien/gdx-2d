@@ -27,13 +27,14 @@ public class Gdx2d implements ApplicationListener {
    private Box2DDebugRenderer debugRenderer;
    static final float WORLD_TO_BOX = 0.1f;
    static final float BOX_TO_WORLD = 10f;
+   static final float BOX_TO_CAMERA = 3f;
 
    @Override
    public void create() {
       float w = Gdx.graphics.getWidth();
       float h = Gdx.graphics.getHeight();
 
-      camera = new OrthographicCamera(BOX_TO_WORLD, h / w * BOX_TO_WORLD);
+      camera = new OrthographicCamera(BOX_TO_CAMERA, h / w * BOX_TO_CAMERA);
       batch = new SpriteBatch();
 
       world = new World(new Vector2(0, -10), true);
@@ -55,7 +56,7 @@ public class Gdx2d implements ApplicationListener {
 
       // 1. Create a BodyDef, as usual.
       BodyDef bd = new BodyDef();
-      bd.position.set(0, 0);
+      bd.position.set(0, -1);
       bd.type = BodyType.StaticBody; //DynamicBody;
 
       // 2. Create a FixtureDef, as usual.
@@ -73,16 +74,13 @@ public class Gdx2d implements ApplicationListener {
 
       // Reference the origin of the model
       Vector2 bottleModelOrigin = loader.getOrigin("test01", BOTTLE_WIDTH).cpy();
-
-      // Vector2 bottlePos = bottleModel.getPosition().sub(bottleModelOrigin);
-      // sprite.setPosition(bottlePos.x, bottlePos.y);
-      // sprite.setOrigin(bottleModelOrigin.x, bottleModelOrigin.y);
-      // sprite.setRotation(bottleModel.getAngle() *
-      // MathUtils.radiansToDegrees);
-      
-      sprite.setSize(1f, 1f * sprite.getHeight() / sprite.getWidth());
+      sprite.setSize(BOTTLE_WIDTH, BOTTLE_WIDTH * sprite.getHeight() / sprite.getWidth());
       sprite.setOrigin(bottleModelOrigin.x, bottleModelOrigin.y);
-      sprite.setPosition(bottleModel.getPosition().x, bottleModel.getPosition().y);
+
+      // this stuff needs to be set in the render loop
+//      Vector2 bottlePos = bottleModel.getPosition().sub(bottleModelOrigin);
+//      sprite.setPosition(bottlePos.x, bottlePos.y);
+//      sprite.setRotation(bottleModel.getAngle() * MathUtils.radiansToDegrees);
    }
 
    @Override
@@ -121,7 +119,9 @@ public class Gdx2d implements ApplicationListener {
 
          if (e != null) {
             // Update the entities/sprites position and angle
-            e.setPosition(b.getPosition().x, b.getPosition().y);
+            Vector2 origin = new Vector2(e.getOriginX(), e.getOriginY());
+            Vector2 pos = b.getPosition().sub(origin);
+            e.setPosition(pos.x, pos.y);
             // We need to convert our angle from radians to degrees
             e.setRotation(MathUtils.radiansToDegrees * b.getAngle());
             e.draw(batch);
