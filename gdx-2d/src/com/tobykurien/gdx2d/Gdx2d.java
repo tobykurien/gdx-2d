@@ -5,6 +5,8 @@ import java.lang.ref.WeakReference;
 import aurelienribon.tweenengine.Tween;
 import aurelienribon.tweenengine.TweenAccessor;
 import aurelienribon.tweenengine.TweenManager;
+import aurelienribon.tweenengine.equations.Bounce;
+import aurelienribon.tweenengine.equations.Sine;
 
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
@@ -257,6 +259,12 @@ public class Gdx2d implements ApplicationListener {
       
       // place ball above bottle
       body.setTransform(0, 1, 0);
-      Tween.to(body, 0, 0.2f).target(2, 2).repeatYoyo(5, 0).start(tm);
+      
+      // tween example
+      Tween.to(body, 0, 0.1f)
+         .target(2, 5)
+         .ease(Sine.IN)
+         .repeatYoyo(3, 0)
+         .start(tm);
    }
 }
