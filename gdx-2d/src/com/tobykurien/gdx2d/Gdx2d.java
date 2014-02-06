@@ -16,6 +16,8 @@ import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
+import com.badlogic.gdx.physics.box2d.CircleShape;
+import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
@@ -52,14 +54,14 @@ public class Gdx2d implements ApplicationListener {
       texture.setFilter(TextureFilter.Linear, TextureFilter.Linear);
       TextureRegion region = new TextureRegion(texture, 0, 0, texture.getWidth(), texture.getHeight());
       Sprite sprite = new Sprite(region);
-      
+
       // 0. Create a loader for the file saved from the editor.
       BodyEditorLoader loader = new BodyEditorLoader(Gdx.files.internal("data/test.json"));
 
       // 1. Create a BodyDef, as usual.
       BodyDef bd = new BodyDef();
       bd.position.set(0, -1);
-      bd.type = BodyType.StaticBody; //DynamicBody;
+      bd.type = BodyType.StaticBody; // DynamicBody;
 
       // 2. Create a FixtureDef, as usual.
       FixtureDef fd = new FixtureDef();
@@ -80,33 +82,40 @@ public class Gdx2d implements ApplicationListener {
       sprite.setOrigin(bottleModelOrigin.x, bottleModelOrigin.y);
 
       // this stuff needs to be set in the render loop
-//      Vector2 bottlePos = bottleModel.getPosition().sub(bottleModelOrigin);
-//      sprite.setPosition(bottlePos.x, bottlePos.y);
-//      sprite.setRotation(bottleModel.getAngle() * MathUtils.radiansToDegrees);
+      // Vector2 bottlePos = bottleModel.getPosition().sub(bottleModelOrigin);
+      // sprite.setPosition(bottlePos.x, bottlePos.y);
+      // sprite.setRotation(bottleModel.getAngle() *
+      // MathUtils.radiansToDegrees);
    }
-   
-   public void createBall() {
-      float BOTTLE_WIDTH = 0.5f;
 
-      // 0. Create a loader for the file saved from the editor.
-      BodyEditorLoader loader = new BodyEditorLoader(Gdx.files.internal("data/test.json"));
+   public void createBall() {
+      float BOTTLE_WIDTH = 0.03f;
 
       // 1. Create a BodyDef, as usual.
       BodyDef bd = new BodyDef();
       bd.position.set(0, 1);
       bd.type = BodyType.DynamicBody;
 
-      // 2. Create a FixtureDef, as usual.
-      FixtureDef fd = new FixtureDef();
-      fd.density = 1;
-      fd.friction = 0.5f;
-      fd.restitution = 0.3f;
+      // Create our body in the world using our body definition
+      Body body = world.createBody(bd);
+      
+      // Create a circle shape and set its radius to 6
+      CircleShape circle = new CircleShape();
+      circle.setRadius(BOTTLE_WIDTH);
 
-      // 3. Create a Body, as usual.
-      Body bottleModel = world.createBody(bd);
+      // Create a fixture definition to apply our shape to
+      FixtureDef fixtureDef = new FixtureDef();
+      fixtureDef.shape = circle;
+      fixtureDef.density = 0.5f;
+      fixtureDef.friction = 0.4f;
+      fixtureDef.restitution = 0.6f; // Make it bounce a little bit
 
-      // 4. Create the body fixture automatically by using the loader.
-      loader.attachFixture(bottleModel, "ball", fd, BOTTLE_WIDTH);
+      // Create our fixture and attach it to the body
+      Fixture fixture = body.createFixture(fixtureDef);
+
+      // Remember to dispose of any shapes after you're done with them!
+      // BodyDef and FixtureDef don't need disposing, but shapes do.
+      circle.dispose();
    }
 
    @Override
@@ -138,10 +147,15 @@ public class Gdx2d implements ApplicationListener {
             // Update the entities/sprites position and angle
             Vector2 origin = new Vector2(e.getOriginX(), e.getOriginY());
             Vector2 pos = b.getPosition().sub(origin);
-            e.setPosition(pos.x, pos.y);
-            // We need to convert our angle from radians to degrees
-            e.setRotation(MathUtils.radiansToDegrees * b.getAngle());
-            e.draw(batch);
+            
+            if (pos.y < -BOX_TO_CAMERA) {
+               // out of view
+            } else {
+               e.setPosition(pos.x, pos.y);
+               // We need to convert our angle from radians to degrees
+               e.setRotation(MathUtils.radiansToDegrees * b.getAngle());
+               e.draw(batch);
+            }
          }
       }
 
@@ -161,18 +175,17 @@ public class Gdx2d implements ApplicationListener {
    public void resume() {
    }
 
-
    @Override
    public void dispose() {
       batch.dispose();
-      
+
       Array<Body> bi = new Array<Body>();
       world.getBodies(bi);
       for (Body b : bi) {
          Sprite s = (Sprite) b.getUserData();
          if (s != null) s.getTexture().dispose();
       }
-      
+
       world.dispose();
       debugRenderer.dispose();
    }
